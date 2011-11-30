@@ -1,0 +1,78 @@
+gawk '
+BEGIN{
+	mflag = 0;
+	nflag = 1;
+	total = 0;  
+	error = 0; 
+
+	if (ARGC < 4){
+		printf("\n[使用法] : syori_to_svm (-multi) (-nolabel) (n1)...(nC) <file>\n"); 
+		error = 1;
+    exit;
+	}
+
+	for(i = 1; i < ARGC; i++){
+		if(ARGV[i] == "-multi"){	
+			mflag = 1;
+			ARGV[i] = "";
+		}
+		else if(ARGV[i] == "-nolabel"){
+			nflag = 0;
+			ARGV[i] = "";
+		}
+	}
+
+	class = 0;
+	total = 0;
+	for(i = 1; i < ARGC - 1; i++){
+		if(ARGV[i] != ""){
+			class++;
+			trnum[class] = ARGV[i];
+			ARGV[i] = "";
+			total += trnum[class];
+		}
+	}
+
+	if((!mflag) && (class > 2)){
+		printf("\n[エラー] : 3クラス以上のデータは -multi を指定して下さい\n");	
+		error = 1;
+		exit;
+	}
+
+	if((mflag) && (!nflag)){
+		printf("\n[エラー] : -multi と -nolabel は同時に指定できません\n");
+		error = 1;
+		exit;
+	}
+
+	shift = 0;
+	class = 1;
+}
+
+{
+	if(error)
+		exit;
+
+	while(NR > shift + trnum[class]){
+		shift += trnum[class];
+		class++;
+	}
+
+	if(NR == 1)
+		printf("%d %d\n", total, NF+nflag);
+
+	if(nflag){
+		if(!mflag)
+			printf("%s %d\n", $0, 2*class-3);
+		else
+			printf("%s %d\n", $0, class-1);
+	}
+	else
+		printf("%s\n", $0);
+}
+
+END{
+	if(error)
+		exit;
+}
+' $*

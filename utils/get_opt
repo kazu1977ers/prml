@@ -1,0 +1,84 @@
+gawk '
+BEGIN{
+	error=0;
+	flag=0;
+	if(ARGC<2){
+		printf("[使い方] : echo (command) | get_opt <opt name>\n");
+		exit;
+	}
+
+	# 与えられたオプションの種類を判定
+	if(ARGV[1] ~ /^--/){               # long format
+		reg1=ARGV[1]" \".*\"";
+		reg2="";
+		flag=1;
+	}
+	else{                              # short format
+		reg1=ARGV[1]" .*-[A-Za-z-]";
+		reg2=ARGV[1]" .*$";
+		flag=2;
+	}
+
+	optlen=length(ARGV[1]);
+	ARGV[1]="";
+}
+
+{
+	if(error==1)
+		exit;
+
+	# オプションの引数を抽出
+	if(flag==1){
+
+		# 指定されたオプションの位置を特定
+		fmatch($0,reg1);	
+		str=substr($0,FSTART,FLENGTH-FSTART+1);
+		remain=substr(str,optlen+3,length(str)-(optlen+3));
+
+	}
+	else if(flag==2){
+
+		# 指定されたオプションの位置を特定
+		fmatch($0,reg1);	
+
+		# 文中の処理
+		if(RLENGTH != -1){
+			str=substr($0,FSTART,FLENGTH-FSTART+1);
+			remain=substr(str,optlen+2,length(str)-2-(optlen+2)+1);
+		}
+		# 文末の処理
+		else{
+			match($0,reg2);
+			str=substr($0,RSTART,RLENGTH);
+			remain=substr(str,optlen+2);
+		}
+
+	}
+
+	# 抽出された引数を表示
+	print remain;
+}
+
+END{
+	if(error==1)
+		exit;
+}
+
+# 最左最短マッチング
+function fmatch(str,reg,len,rlen)
+{
+	FSTART=match(str,reg)
+	rlen=RLENGTH
+	if(RLENGTH > 0){
+		len=1
+		while(match(substr(str,1,len), reg) == 0)
+			len++;
+		FLENGTH=len
+		RLENGTH=rlen
+	}
+	else
+		FLENGTH=RLENGTH
+
+	return FSTART
+}
+' $*

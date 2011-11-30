@@ -1,0 +1,74 @@
+gawk '
+BEGIN{
+	error = 0;
+	if(ARGC < 3){
+		printf("\n[使用法] : dinfo_reader <file> <data name> (item)\n");
+		error = 1;
+		exit;
+	}
+
+	# remove path to obtain data name.
+	count = split(ARGV[2], list, "/");
+	name = list[count];
+
+  # get target item if specified.	
+	item = ARGV[3];
+	ARGV[2] = "";
+	ARGV[3] = "";
+
+  # switch output mode.
+	aflag = 0;
+	if(item == "")
+		aflag = 1;
+}
+
+{
+	if(error == 1)
+		exit;
+
+	for(i=1; i<=NF; i++){
+		data[NR,i] = $i;
+		line[NR] = NF;
+	}
+}
+
+END{
+	if(error == 1)
+		exit;
+
+  # check index from the top line.
+	for(i=1; i<=NR; i++){
+
+    # determine target index
+		if(data[i,1] == "#" && data[i,2] == name){
+
+			# output all information
+		  if(aflag){
+				for(j=1; j<=3; j++){		
+				  for(k=1; k<=line[i+j]; k++)
+						 printf("%s ",data[i+j,k]);
+          printf("\n");
+        }
+			  exit;
+			}
+
+      # output specified information
+			else{
+				for(j=1; j<=3; j++){
+			    if(data[i+j,1] == item){
+				    for(k=3; k<=line[i+j]; k++){
+					    printf("%d", data[i+j,k]);
+					      if(k != line[i+j])
+						      printf(" ");
+				    }
+   				  exit;
+		 	    }
+		    }
+      }
+
+    }
+
+	}
+
+}
+' $*

@@ -1,0 +1,64 @@
+#!/bin/tcsh -f
+
+# --- Parse the arguments --- #
+
+if ($#argv < 1) then
+    echo "\n[使用法] : gen_rate_table <cinfo>\n"
+    exit
+endif
+
+set method = `cinfo_reader $argv[1]`
+set bname = "log_cls"
+set lfile = `ls -l -t -r log_cls_* | gawk '{print $9}'`
+echo "$#lfile $bname is found."
+
+# --- Preparation --- #
+
+set output = "disc_rate.log"
+rm -rf ./$output
+touch ./$output
+echo -n "Collecting the recognition rate ...... "
+
+
+# --- Start processing --- #
+
+set i = 1
+while ($i <= $#lfile)
+
+		set fsnum = `gawk '/\# of features/{printf("%d ",$5)}' $lfile[$i]`
+		echo $fsnum | gawk '{printf("%4d ",$0);}' >>& $output
+
+		set j = 1
+		while($j <= $#method)
+    
+				if("$method[$j]" == "LDF") then
+						gawk '/LDF in/{printf("%f ",$7)}' $lfile[$i] >>& $output
+				else if("$method[$j]" == "QDF") then
+						gawk '/QDF in/{printf("%f ",$7)}' $lfile[$i] >>& $output
+				else if("$method[$j]" == "SUB") then
+						gawk '/SUB in/{printf("%f ",$7)}' $lfile[$i] >>& $output
+				else if("$method[$j]" == "C45") then
+						gawk '/C45 in/{printf("%f ",$7)}' $lfile[$i] >>& $output
+				else if("$method[$j]" == "KNN") then
+						gawk '/KNN in/{printf("%f ",$7)}' $lfile[$i] >>& $output
+				else if("$method[$j]" == "NNC") then
+						gawk '/NNC in/{printf("%f ",$7)}' $lfile[$i] >>& $output
+				else if("$method[$j]" == "SVM") then
+						gawk '/SVM in/{printf("%f ",$7)}' $lfile[$i] >>& $output
+				endif
+
+				@ j++
+		end
+
+		echo " " >>& $output
+    @ i++
+end
+
+
+# --- Sort by # of features --- #
+
+cp ${output} ${output}.old
+sort -n ${output}.old >! ${output}
+/bin/rm ${output}.old
+
+echo "Finished.\n"

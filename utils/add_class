@@ -1,0 +1,27 @@
+gawk '
+BEGIN{
+c = 0
+num[0] = 0
+if (ARGC <= 2)
+{
+  printf("\n[使用法] : add_class <file> <n1> ... <nC>\n");
+	exit(0);
+}
+
+for (i=2; ARGV[i] ~ /^[0-9]+$/; i++)
+{
+	num[++c] = ARGV[i]
+	ARGV[i] = ""
+}
+for (i=1; i<=c; i++)
+	num[i] += num[i-1]
+c =0
+}
+
+NR > num[c] && NR <= num[c+1] {
+	printf("Class %d : %s\n",c, $0)
+}
+NR >= num[c+1] {c++}
+
+' $*
+ 

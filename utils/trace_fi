@@ -1,0 +1,40 @@
+gawk '
+BEGIN{
+	error = 0;
+  if(ARGC < 2){
+    printf("\n[使用法] : trace_fi <logfile>\n");
+		error = 1;
+    exit;
+  }
+}
+
+{
+  num[NR] = NF;
+  for(i=1 ; i<=NF ; i++)
+    fdata[NR,i] = $i;
+}
+
+END{
+		if(error)
+			exit;
+
+    for(i=1 ; i<=num[1] ; i++)
+      table[i] = i;
+
+    for(i=2 ; i<=NR ; i++){
+    
+      for(j=1 ; j<=num[i] ; j++){
+        tmp = fdata[i,j];
+        fi[j] = table[tmp];
+      }
+
+      for(j=1 ; j<=num[i] ; j++)
+        table[j] = fi[j];
+    }
+
+    for(i=1 ; i<=num[NR] ; i++)
+      printf("%d ", table[i]);
+    printf("\n");
+}
+
+' $*

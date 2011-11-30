@@ -1,0 +1,33 @@
+.TH normalize 1
+
+
+.SH プログラム名
+normalize - データの正規化を行う
+
+
+.SH 使い方
+normalize <file> (-mean_sigma / -min_max / -lp (num) or inf)
+
+
+.SH オプション
+.TP
+.br
+.B
+<file>:
+使用するデータのファイル名を指定して下さい。この引数は最初でなければなりません。
+.TP
+.br
+.B
+-mean_sigma / -min_max / -lp (num) or inf:
+正規化の方法を指定することができます。-mean_sigmaの場合には平均0、標準偏差が1で全ての次元で等しくなるようにします。-min_maxの場合には区間[-1,1]に収まるように正規化します。-lpを指定すると、各サンプルを一つのベクトルとみなし、各ベクトルのLp-ノルムを計算した後Lp-ノルムで正規化します。infを指定すればL∞-ノルムで正規化します。特に指定がなければ、平均0、標準偏差が1になるように正規化します。
+
+
+.SH 実行例
+example.trnのデータを正規化し、out.datに出力する場合には、以下のようにします。
+
+.br
+% normalize example.trn -mean_sigma > out.dat
+
+
+.SH 出力
+結果は標準出力に処理フォーマットで出力されます。

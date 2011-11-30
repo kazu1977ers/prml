@@ -1,0 +1,99 @@
+#!/bin/tcsh -f
+
+# --- Parse the arguments --- #
+
+if ($#argv < 2) then
+    echo "\n[使用法] : gen_rate_fs_fig <name> <dinfo> <cinfo> (-from (num)) (-to (num))\n"
+    exit
+endif
+
+set feature = `dinfo_reader $argv[2] $argv[1] feature`
+set method = `cinfo_reader $argv[3]`
+set lfile = `ls -l -t -r log_cls_* | gawk '{print $9}'`
+if($#lfile == 0) then
+		echo "no log_cls file found."
+		exit
+else
+		echo "$#lfile log_cls found."
+endif
+
+set ymin = `echo $argv | get_opt -from`
+set ymax = `echo $argv | get_opt -to`
+
+# --- Preparation --- #
+
+set output = "disc_rate.log"
+rm -rf ./$output
+touch ./$output
+echo -n "Collecting the recognition rate ...... "
+
+
+# --- Start processing --- #
+
+set i = 1
+while ($i <= $#lfile)
+
+		set fsnum = `gawk '/\# of features/{printf("%d ",$5)}' $lfile[$i]`
+		echo $fsnum | gawk '{printf("%4d ",$0);}' >>& $output
+
+		set j = 1
+		while($j <= $#method)
+    
+				if("$method[$j]" == "LDF") then
+						gawk '/LDF in/{printf("%f ",$7)}' $lfile[$i] >>& $output
+				else if("$method[$j]" == "QDF") then
+						gawk '/QDF in/{printf("%f ",$7)}' $lfile[$i] >>& $output
+				else if("$method[$j]" == "SUB") then
+						gawk '/SUB in/{printf("%f ",$7)}' $lfile[$i] >>& $output
+				else if("$method[$j]" == "C45") then
+						gawk '/C45 in/{printf("%f ",$7)}' $lfile[$i] >>& $output
+				else if("$method[$j]" == "KNN") then
+						gawk '/KNN in/{printf("%f ",$7)}' $lfile[$i] >>& $output
+				else if("$method[$j]" == "NNC") then
+						gawk '/NNC in/{printf("%f ",$7)}' $lfile[$i] >>& $output
+				else if("$method[$j]" == "SVM") then
+						gawk '/SVM in/{printf("%f ",$7)}' $lfile[$i] >>& $output
+				endif
+
+				@ j++
+		end
+
+		echo " " >>& $output
+    @ i++
+end
+
+
+# --- Sort by # of features --- #
+
+cp ${output} ${output}.old
+sort -n ${output}.old >! ${output}
+/bin/rm ${output}.old
+
+
+# --- Generate graph between feature subset and recognition rate --- #
+
+/bin/rm -rf command.txt
+touch command.txt
+set i = 1
+echo "set xlabel 'Number of features'" >>& command.txt
+echo "set ylabel 'Recognition rate(%)'" >>& command.txt
+echo -n "plot [0:$feature][${ymin}:${ymax}]" >>& command.txt
+while($i <= $#method)
+		set j = `echo "$i + 1" | bc`
+		if($i < $#method) then
+				echo -n "'$output' using 1:$j title '$method[$i]' w l, " >>& command.txt
+		else
+				echo "'$output' using 1:$j title '$method[$i]' w l" >>& command.txt
+		endif
+		@ i++
+end
+echo 'set t tgif "Helvetica" 24' >>& command.txt
+echo "set output 'rate_fs.obj'" >> command.txt
+echo "replot" >>& command.txt
+echo "set t post" >>& command.txt
+echo "set output 'rate_fs.ps'" >>& command.txt
+echo "replot" >>& command.txt
+
+gnuplot command.txt
+/bin/rm -rf command.txt
+echo "Finished.\n"

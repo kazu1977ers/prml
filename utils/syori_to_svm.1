@@ -1,0 +1,32 @@
+.TH syori_to_svm 1
+
+
+.SH プログラム名
+syori_to_svm - 処理フォーマットからSVMTorch、SVMTestのプログラムのデータ形式に変換
+
+
+.SH 使い方
+syori_to_svm (-multi) (-nolabel) (n1)...(nC) <file>
+
+
+.SH オプション
+.TP
+.br
+.B
+-multi:
+多クラス用データを作成する場合に使用します。ここで言う多クラスとは3クラス以上です。
+.TP
+.br
+.B
+-nolabel:
+クラスラベルを付けないデータを作成する。
+.TP
+.br
+.B
+(n1)...(nC):
+各クラスのサンプル数を指定する。-nolabelを指定した場合には必要無い。
+.TP
+.br
+.B
+<file>:
+データのファイル名を指定する。

@@ -1,0 +1,138 @@
+.TH sfs_knn 1
+
+
+.SH プログラム名
+sfs_knn - SFS法による特徴選択(k近隣法の識別率を評価関数とする)
+
+
+.SH 使い方
+sfs_knn <file> [-c (num)] [-tr (n1)...(nC)] [-sel (num) / -trace] (-k (num)) (-i (num)) (-fold (num))
+
+
+.SH オプション
+.TP
+.br
+.B
+<file>:
+使用するデータのファイル名を指定して下さい。この引数は最初でなければなりません。
+.TP
+.br
+.B
+-c (num):
+使用するデータのクラス数を指定して下さい。
+.TP
+.br
+.B
+-tr (n1)...(nC):
+使用するデータのクラス毎のサンプル数を指定して下さい。
+.TP
+.br
+.B
+-sel (num) or -trace:
+-selオプションを使用すると選択する特徴数を指定することができます。-traceオプションを指定すれば、探索した全ての特徴集合の中で識別率を最大にするものを選択します。
+.TP
+.br
+.B
+-k (num):
+k近隣識別子のkの値を指定することができます。特に指定が無ければk=1となり、最近隣法が実行されます。
+.TP
+.br
+.B
+-i (num):
+n-fold cross validationを実行する際、与えられたデータを一旦乱数を用いて並び換えます。その時の乱数の種を指定することができます。特に指定がなければプロセスIDを用います。
+.TP
+.br
+.B
+-fold (num):
+n-fold cross validationにおける分割数(=n)を指定することができます。n=サンプル数のとき、leave-one-outになります。特に指定がなければleave-one-outが実行されます。
+
+
+.SH 実行例
+example.trnというデータを使用し、クラス数は2、次元数は10、サンプル数はクラス毎に50ずつであるとします。最近隣法(k=1)を使用して、選択する特徴数を4にするには、以下のように実行します。
+
+.br
+% sfs_knn example.trn -c 2 -tr 50 50 -sel 4
+
+.br
+上記の例では、leave-one-outが実行されます。また、k(k=3)近隣法の10-fold cross validionで計算した識別率が最大になる特徴集合を求める場合には、以下のように実行します。
+
+.br
+% sfs_knn example.trn -c 2 -tr 50 50 -trace -k 3 -fold 10
+
+.br
+sfs_knnを実行すると、最初に以下のような引数の読み込み状況が表示されますので確認することができます。
+
+.br
+File    : example.trn
+.br
+Class   : 2
+.br
+Sample  : 50 50 (100 samples total)
+.br
+Feature : 10
+.br
+
+.br
+* Use 1-nearest neighbor rule for criterion.
+.br
+
+.br
+* 10-fold cross validation is used.
+.br
+
+.br
+* 12288 is used for random seed.
+.br
+
+.br
+* Select feature subset that maximizes criterion.
+
+
+
+.SH 結果の出力
+実行中には以下のような出力を表示します。
+
+.br
+* backward step
+.br
+[ (Sel/Rej)=(  2/  8) , Eval=    94 : C(2)=83.000000 ]
+.br
++ { 1 3 }
+.br
+- { 2 4 5 6 7 8 9 10 }
+
+.br
+上から順に、以下の形式になっています。
+
+.br
+* 今の処理がどちら向き(backward/forward)であるか
+.br
+[ 選択された特徴数/削除された特徴数 , 特徴の評価回数 : 評価関数の値 ]
+.br
++ { 選択された特徴集合 }
+.br
+- { 削除された特徴集合 }
+
+.br
+そして一番最後に以下のような実行結果を表示します。
+
+.br
+-*-*-*-*-*-*-*- RESULT -*-*-*-*-*-*-*-
+
+.br
+Feature subsets := { 1 3 4 }
+
+.br
+Selected # of features := 3
+
+.br
+Best criterion value := 91.000000
+
+.br
+Evaluation time :=    113
+
+.br
+Elapsed time :=   0.03 min.
+
+.br
+上記の例は -trace を指定して実行した時の結果ですが、-sel を指定したときも同様の出力結果が得られます。

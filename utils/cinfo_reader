@@ -1,0 +1,41 @@
+gawk '
+BEGIN{
+	error = 0;
+	flag = 0;
+	if(ARGC < 2){
+		printf("\n[使用法] : cinfo_reader <file> (label)\n");
+		error = 1;
+		exit;
+	}
+
+	if(ARGC == 3){
+		flag = 1;
+		cls = ARGV[2];
+		ARGV[2] = "";
+	}
+}
+
+{
+	if(error == 1)
+		exit;
+
+	if(flag == 0){
+		if($1 == "classifier"){
+			for(i=3; i<=NF; i++){
+				printf("%s", $i);
+				if(i != NF)
+					printf(" ");
+			}
+		}
+	}
+	else{
+		if($1 == cls){
+			for(i=3;i<=NF;i++){
+				printf("%s", $i);
+				if(i != NF)
+					printf(" ");
+			}
+		}
+	}
+}
+' $*

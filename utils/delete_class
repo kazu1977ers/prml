@@ -1,0 +1,44 @@
+gawk '
+BEGIN{
+	error=0;
+	nflag = 0;
+	if (ARGC < 4){
+		printf("\n[使用法] : delete_class <file> <output> <#class>\n\n")
+		error=1;
+		exit(0);
+	}
+
+	cnum = 0;
+	ofile = ARGV[2]
+	ARGV[2] = ""
+	cnum = ARGV[3]
+	ARGV[3] = ""
+	for (i=0 ; i<cnum; i++)
+		num[i] = 0;
+}
+
+{
+	cl = $2;
+	for(i=4; i<=NF; i++)
+	  d[cl,num[cl],i] = $i
+
+	num[cl]++;
+	nff = NF;
+}
+
+END{
+	if(error)
+		exit;
+
+	for(k=0; k<cnum; k++)
+	  for(j=0; j<num[k]; j++)
+	  {
+		for(i=4; i<=nff; i++)
+		  printf("%s ",d[k,j,i]) > ofile
+		print "" > ofile
+ 	  }
+
+	for(k=0; k<cnum; k++)
+	  printf("%d ", num[k]);
+}
+' $*

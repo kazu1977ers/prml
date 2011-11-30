@@ -1,0 +1,96 @@
+.TH cinfo_reader 1
+
+
+.SH プログラム名
+cinfo_reader - 使用する識別子とそのオプションを得る
+
+
+.SH 使用する識別子を保存する
+使用する識別子とそのオプションを一つのファイルに保存して下さい。形式は以下の通りです。
+
+.br
+classifier : (str1)...(strM)
+.br
+(str1) : (option1)
+.br
+(str2) : (option2)
+.br
+   :
+.br
+   :
+.br
+(strM) : (optionM)
+
+.br
+pattern-srcに含まれている識別子は線形識別子、2次識別子、k近隣法、C4.5、部分クラス法、ニューラルネットワーク、support vector machineです。これらの識別子をアルファベット3文字のラベルで指定します。各識別子のラベルは以下の通りです。
+
+.br
+-----------------------+--------
+.br
+        識別子         | ラベル
+.br
+-----------------------+--------
+.br
+線形識別子             |  LDF
+.br
+2次識別子              |  QDF
+.br
+k近隣法                |  KNN
+.br
+C4.5(決定木)           |  C45
+.br
+部分クラス法           |  SUB
+.br
+ニューラルネットワーク |  NNC
+.br
+support vector machine |  SVM
+.br
+-----------------------+--------
+
+.br
+使用する識別子を線形識別子、k近隣法、support vector machineとします。また、k近隣法ではk=1とし、support vector machineにおけるradial basis funcionの標準偏差のパラメータを10.0とする場合、以下の内容ファイルに保存します。
+
+.br
+classifier : LDF KNN SVM
+.br
+LDF :
+.br
+KNN : -k 1
+.br
+SVM : --torch_opt "-t 2 -st 10.0"
+
+.br
+ファイル名は何でも構いません。基本的には、このファイルで記述するオプションは、各ラベルに対応する識別子のプログラムのオプションです。
+
+.SH 識別子のプログラム
+各ラベルに対応する識別子のプログラムは標準では以下の通りです。
+
+.br
+--------+---------------
+.br
+ ラベル |   プログラム
+.br
+--------+---------------
+.br
+  LDF   |  bayes_disc     
+.br
+  QDF   |  bayes_disc
+.br
+  KNN   |  k_nn_disc
+.br
+  C45   |  c45
+.br
+  SUB   |  subclass
+.br
+  NNC   |  neural_disc
+.br
+  SVM   |  svm
+.br
+--------+---------------
+
+.br
+ラベルからプログラムへの変換は\fBcv_method\fRや\fBclassify\fR内で自動的に行われます。pattern-srcパッケージ内で識別率を計算するプログラムは主に上記の二つです。
+
+
+.SH 注意事項
+直接識別子のプログラムを実行する場合を除いて、\fBcv_method\fRなどのスクリプトを使用する場合は、幾つかのオプションが制限されている可能性があります。各識別子で使用できるオプションは、コマンドだけを入力するかmanを参照する事で見れます。

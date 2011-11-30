@@ -1,0 +1,53 @@
+gawk '
+BEGIN{
+		if (ARGC <= 3)
+		{
+				printf("\n[使用法] : syori_to_c45 <file> <'data' / 'test'> <class> <n1> <n2> ... <nC>\n\n"); 
+				exit(1);
+		}
+
+		nfea = 1;
+		fname = ARGV[1];
+		ext = ARGV[2];
+		cnum = ARGV[3];
+		ARGV[2] = "";
+		ARGV[3] = "";
+		nnames = fname".names"
+		dnames = fname"."ext;
+
+		f[0] = 0;
+		for (i=4; i<ARGC; i++)
+		{
+				f[nfea] = f[nfea-1] + ARGV[i];
+				printf("%d samples passed in class %d\n",f[nfea],nfea);
+				nfea++;
+				ARGV[i] = ""
+		}
+
+		printf("") > nnames;
+		printf("") > dnames;
+		for (i=1; i< nfea; i++)
+				printf("CLASS-%d%s", i, (i==(nfea-1)) ? ".\n\n" : ", ") >> nnames;
+
+		cl = 1;
+		c = 0;
+		print 
+}
+
+NR==1{
+
+		for (i=1; i<= NF; i++)
+		printf("FEA-%d: continuous.\n", i) >> nnames;
+}
+
+{
+		c++;
+		if (c > f[cl])
+				cl++;
+
+		for (i=1; i<=NF; i++)
+				printf("%s, ",$i)  >> dnames;
+
+		printf("CLASS-%d\n", cl)  >> dnames;
+}
+' $*

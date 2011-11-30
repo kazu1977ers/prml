@@ -1,0 +1,56 @@
+#!/bin/tcsh -f
+
+# --- Parse the arguments --- #
+if ($#argv < 2) then
+    echo "\n[使用法] : gen_cri_fig <file> <#feature> (-norm)\n"
+    exit
+endif
+
+set input  = $argv[1]
+set feature = $argv[2]
+
+set nflag = 0
+if($#argv == 3) then
+		if("$argv[3]" == "-norm") then
+				set nflag = 1
+		endif
+endif
+
+if ( !( -e $input ) )then
+		echo "\n[エラー] : ファイル $input が見つかりません\n"
+		exit
+endif
+
+
+# --- Normalize data --- #
+
+if($nflag == 1) then
+		cp $input tmp_$input
+		gawk 'BEGIN{max=-100000}{item[NR]=$1;value[NR]=$2;if(max<value[NR])max=value[NR];}END{for(i=1;i<=NR;i++)printf("%3d\t%f\n",item[i],value[i]/max);}' tmp_$input >! $input
+		mv tmp_$input $input.old
+endif
+
+
+# --- Setup command for gnuplot --- #
+
+rm -rf plot.txt
+touch plot.txt
+
+echo -n "Generating figures of criterion value ........ "
+echo "set xlabel 'Number of features'" >>& plot.txt
+echo "set ylabel 'Value of criterion function'" >>& plot.txt
+if($nflag == 1) then
+		echo "plot [0:$feature][0:1] '$input' notitle w l" >>& plot.txt
+else
+		echo "plot [0:$feature] '$input' notitle w l" >>& plot.txt
+endif
+echo 'set t tgif "Helvetica" 24' >>& plot.txt
+echo "set output 'crite_value.obj'" >>& plot.txt
+echo "replot" >>& plot.txt
+echo "set t post" >>& plot.txt
+echo "set output 'crite_value.ps'" >>& plot.txt
+echo "replot" >>& plot.txt
+
+gnuplot plot.txt
+/bin/rm -rf ./plot.txt
+echo "finished."

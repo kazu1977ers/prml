@@ -1,0 +1,122 @@
+#!/bin/tcsh -f
+
+# parse arguments
+if ($#argv < 5) then
+    echo "\n[使用法] : rotate_fig <file> [-c (num)] [-tr (n1)...(nC)] (-step (num))\n"
+    exit
+endif
+
+set filename = $1
+set pflag = 0
+set t = 0
+set dt = 1
+
+set i = 2
+set class = 0
+while($i <= $#argv)
+		if("$argv[$i]" == "-c") then
+				@ i++
+				set class = $argv[$i]
+		endif
+		@ i++
+end
+
+if($class == 0) then
+		echo "\n[エラー] : クラス数が指定されていません\n"
+		exit
+endif
+
+set i = 2
+set sample = ("")
+while($i <= $#argv)
+		if("$argv[$i]" == "-c") then
+				@ i++
+		else if("$argv[$i]" == "-tr") then
+				set sample = ("")
+				set p = 1
+				while($p <= $class)
+						@ i++
+						set sample = ($sample "$argv[$i]")
+						@ p++
+				end
+		else if("$argv[$i]" == "-step") then
+				@ i++
+				set dt = $argv[$i]
+		else
+				echo "\n[エラー] : 不明な引数 $argv[$i] が指定されました\n"
+				exit
+		endif
+		@ i++
+end
+
+if($#sample == 0) then
+		echo "\n[エラー] : サンプル数が指定されていません\n"
+		exit
+endif
+
+set dim      = `gawk 'END{print NF}' $filename`
+
+
+# check dimensionality and transform
+echo "\n=> データ $filename を加工しています\n"
+if($dim >= 4) then
+		pca $filename -type 2 >! tmp
+		gawk '{printf("%f %f %f\n", $1, $2, $3);}' tmp > tmp.data
+else if($dim == 3) then
+    cp $filename tmp.data
+else
+		echo "\n[エラー] : データが正しくありません\n"
+		exit
+endif
+
+
+# split data for each class
+file_split tmp.data -o Class -s $class $sample
+rm plist >>& /dev/null ; touch plist
+
+
+# generate plotting animation
+echo "=> 図を作成しています"
+set i = 1
+set list = ("")
+while($i <= $class)
+		set list = ($list "Class_$i")
+		echo -n "'Class_$i'" >>& plist
+		if($i != $class) then
+				echo -n "," >>& plist
+		endif
+		@ i++
+end
+set str = `cat plist`
+set ofile = tmp$$
+echo "set parametric" > $ofile
+
+while (1)
+		set t = `echo "$t + $dt" | bc`
+		set proc = `echo "100 * $t / 360" | bc`
+		echo -n "\t$proc% 終了しました\r"
+		set flag = `echo "$t > 360" | bc`
+
+		if ($flag) break       # 1回転分を作成したら終了
+
+		echo "splot $str" >> $ofile
+		echo "set view 60,$t,1,1" >> $ofile
+		echo "set title 'Zrotate = $t'" >> $ofile
+		echo "replot" >> $ofile
+end
+echo ""
+
+# Display
+echo "\n=> gnuplot で表示します\n"
+DISPLAY:
+gnuplot $ofile
+
+echo -n "もう一度見ますか? (y/n) > "
+set ans = $<
+if($ans == 'y') then
+		goto DISPLAY
+endif
+
+
+# Clean garbage file
+rm $ofile plist tmp.data tmp tmp_class Class_* >>& /dev/null
